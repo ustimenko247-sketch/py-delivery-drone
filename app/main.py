@@ -41,7 +41,17 @@ class FlyingRobot(BaseRobot):
         weight: int,
         coords: Optional[list[int]] = None,
     ) -> None:
-        super().__init__(name, weight, coords if coords else [0, 0, 0])
+        if coords is None:
+            # Використати стандартну 2D логіку BaseRobot
+            super().__init__(name, weight)
+            # Додати третю координату (z)
+            self.coords.append(0)
+        else:
+            # Нормалізувати до [x, y, z]
+            x, y = coords[0], coords[1]
+            z = coords[2] if len(coords) > 2 else 0
+            super().__init__(name, weight, [x, y])
+            self.coords = [x, y, z]
 
     def go_up(self, steps: int = 1) -> None:
         self.coords[2] += steps
@@ -63,8 +73,9 @@ class DeliveryDrone(FlyingRobot):
         self.max_load_weight: int = max_load_weight
         self.current_load: Optional[Cargo] = None
 
-        if current_load and current_load.weight <= self.max_load_weight:
-            self.current_load = current_load
+        # Використати hook_load для перевірки вантажу
+        if current_load:
+            self.hook_load(current_load)
 
     def hook_load(self, cargo: Cargo) -> None:
         if self.current_load is None and cargo.weight <= self.max_load_weight:
